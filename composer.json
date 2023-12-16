@@ -1,0 +1,17 @@
+{
+    "name": "trusov/memsess-client-php",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sergei Trusow",
+            "email": "i@trusow.ru"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "MemSess\\": "src/"
+        }
+    }
+}
