@@ -2,7 +2,6 @@
 namespace MemSess;
 
 include_once 'Serialization.php';
-include_once 'Network.php';
 
 class SessionKey {
     public $idKey;
@@ -21,12 +20,8 @@ class Client {
     private const CMD_REMOVE_KEY = 9;
     private const CMD_EXIST_KEY = 10;
     private const CMD_PROLONG_KEY = 11;
-    private const CMD_SET_READ_PER_SEC = 12;
-    private const CMD_SET_WRITE_PER_SEC = 13;
     private const CMD_ALL_ADD_KEY = 14;
     private const CMD_ALL_REMOVE_KEY = 15;
-    private const CMD_ALL_SET_READ_PER_SEC = 16;
-    private const CMD_ALL_SET_WRITE_PER_SEC = 17;
     private const CMD_ADD_SESSION = 18;
 
     private $_uuid = '';
@@ -122,14 +117,12 @@ class Client {
         $this->validateResult( $result );
     }
 
-    public function addKey( $key, $value, $lifetime = 0, $limitRead = 0, $limitWrite = 0 ) {
+    public function addKey( $key, $value, $lifetime = 0 ) {
         $cmd = $this->getCmd( self::CMD_ADD_KEY );
         $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
         $keyString = $this->getKeyString( $key );
         $valueString = $this->getValueString( $value );
         $lifetimeInt = $this->getValueInt( $lifetime );
-        $limitReadShortInt = $this->getValueShortInt( $limitRead );
-        $limitWriteShortInt = $this->getValueShortInt( $limitWrite );
 
         $data = Serialization::pack( [
             $cmd,
@@ -137,8 +130,6 @@ class Client {
             $keyString,
             $valueString,
             $lifetimeInt,
-            $limitReadShortInt,
-            $limitWriteShortInt,
         ] );
 
         if( !$this->send( $data ) ) {
@@ -162,19 +153,15 @@ class Client {
         $this->_keys[$key] = $clsKey;
     }
 
-    public function addAllKey( $key, $value, $limitRead = 0, $limitWrite = 0 ) {
+    public function addAllKey( $key, $value ) {
         $cmd = $this->getCmd( self::CMD_ALL_ADD_KEY );
         $keyString = $this->getKeyString( $key );
         $valueString = $this->getValueString( $value );
-        $limitReadShortInt = $this->getValueShortInt( $limitRead );
-        $limitWriteShortInt = $this->getValueShortInt( $limitWrite );
 
         $data = Serialization::pack( [
             $cmd,
             $keyString,
             $valueString,
-            $limitReadShortInt,
-            $limitWriteShortInt,
         ] );
 
         if( !$this->send( $data ) ) {
@@ -185,12 +172,13 @@ class Client {
         $this->validateResult( $result );
     }
 
-    public function getKey( $key  ) {
+    public function getKey( $key, $limit = 0 ) {
         $cmd = $this->getCmd( self::CMD_GET_KEY );
         $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
         $keyString = $this->getKeyString( $key );
+        $limitInt = $this->getValueShortInt( $limit );
 
-        if( !$this->send( Serialization::pack( [$cmd, $uuid, $keyString] ) ) ) {
+        if( !$this->send( Serialization::pack( [$cmd, $uuid, $keyString, $limitInt] ) ) ) {
             $this->throwError( Codes::E_SEND );
         }
 
@@ -214,11 +202,12 @@ class Client {
         return $valueString->value;
     }
 
-    public function setKey( $key, $value ) {
+    public function setKey( $key, $value, $limit = 0 ) {
         $cmd = $this->getCmd( self::CMD_SET_KEY );
         $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
         $keyString = $this->getKeyString( $key );
         $valueString = $this->getValueString( $value );
+        $limitInt = $this->getValueShortInt( $limit );
 
         if( !isset( $this->_keys[$key] ) ) {
             $this->throwError( Codes::E_NOT_FOUND_KEY );
@@ -227,7 +216,7 @@ class Client {
         $keyId = $this->getValueInt( $this->_keys[$key]->idKey );
         $counterRecord = $this->getValueInt( $this->_keys[$key]->idRecord );
 
-        $data = [ $cmd, $uuid, $keyString, $valueString, $keyId, $counterRecord ];
+        $data = [ $cmd, $uuid, $keyString, $valueString, $keyId, $counterRecord, $limitInt ];
 
         if( !$this->send( Serialization::pack( $data ) ) ) {
             $this->throwError( Codes::E_SEND );
@@ -239,13 +228,14 @@ class Client {
         $this->_keys[$key]->idRecord++;
     }
 
-    public function setForceKey( $key, $value ) {
+    public function setForceKey( $key, $value, $limit = 0 ) {
         $cmd = $this->getCmd( self::CMD_SET_FORCE_KEY );
         $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
         $keyString = $this->getKeyString( $key );
         $valueString = $this->getValueString( $value );
+        $limitInt = $this->getValueShortInt( $limit );
 
-        $data = [ $cmd, $uuid, $keyString, $valueString ];
+        $data = [ $cmd, $uuid, $keyString, $valueString, $limitInt ];
 
         if( !$this->send( Serialization::pack( $data ) ) ) {
             $this->throwError( Codes::E_SEND );
@@ -305,66 +295,12 @@ class Client {
     }
 
     public function prolongKey( $key, $lifetime ) {
-        $cmd = $this->getCmd( self::CMD_EXIST_KEY );
+        $cmd = $this->getCmd( self::CMD_PROLONG_KEY );
         $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
         $keyString = $this->getKeyString( $key );
-        $lifetimeInt = $this->getValueInt( $lifetimeInt );
+        $lifetimeInt = $this->getValueInt( $lifetime );
 
         if( !$this->send( Serialization::pack( [$cmd, $uuid, $keyString, $lifetimeInt] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
-    }
-
-    public function setKeyReadLimitPerSec( $key, $limit ) {
-        $cmd = $this->getCmd( self::CMD_SET_READ_PER_SEC );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $keyString = $this->getKeyString( $key );
-        $limitInt = $this->getValueShortInt( $limit );
-
-        if( !$this->send( Serialization::pack( [$cmd, $uuid, $keyString, $limitInt] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
-    }
-
-    public function setAllKeyReadLimitPerSec( $key, $limit ) {
-        $cmd = $this->getCmd( self::CMD_ALL_SET_READ_PER_SEC );
-        $keyString = $this->getKeyString( $key );
-        $limitInt = $this->getValueShortInt( $limit );
-
-        if( !$this->send( Serialization::pack( [$cmd, $keyString, $limitInt] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
-    }
-
-    public function setKeyWriteLimitPerSec( $key, $limit ) {
-        $cmd = $this->getCmd( self::CMD_SET_WRITE_PER_SEC );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $keyString = $this->getKeyString( $key );
-        $limitInt = $this->getValueShortInt( $limit );
-
-        if( !$this->send( Serialization::pack( [$cmd, $uuid, $keyString, $limitInt] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
-    }
-
-    public function setAllKeyWriteLimitPerSec( $key, $limit ) {
-        $cmd = $this->getCmd( self::CMD_ALL_SET_WRITE_PER_SEC );
-        $keyString = $this->getKeyString( $key );
-        $limitInt = $this->getValueShortInt( $limit );
-
-        if( !$this->send( Serialization::pack( [$cmd, $keyString, $limitInt] ) ) ) {
             $this->throwError( Codes::E_SEND );
         }
 
@@ -394,10 +330,10 @@ class Client {
         case Codes::E_SEND:
         case Codes::E_NOT_FOUND_KEY:
         case Codes::E_DUPLICATE_SESSION:
-            throw new Exception( $error );
+            throw new BaseException( $error );
             break;
         default:
-            throw new Exception( Codes::E_UNKNOWN );
+            throw new BaseException( Codes::E_UNKNOWN );
             break;
         }
     }
