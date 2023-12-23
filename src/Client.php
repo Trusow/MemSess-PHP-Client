@@ -35,21 +35,17 @@ class Client {
     public function generate( $lifetime ) {
         if( $this->_uuid ) return $this->_uuid;
 
-        $cmd = $this->getCmd( self::CMD_GENERATE );
-        $prolong = $this->getProlong( $lifetime );
+        $this->send([
+            $this->getCmd( self::CMD_GENERATE ),
+            $this->getLifetime( $lifetime ),
+        ]);
 
-        $data = Serialization::pack( [$cmd, $prolong] );
+        $result = $this->recv();
 
-        if( !$this->send( Serialization::pack( [$cmd, $prolong] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $data = $this->recv();
-
-        $answer = ord( $data[0] );
+        $answer = ord( $result[0] );
 
         if( $answer == Codes::OK ) {
-            $this->_uuid = UUID::toNormal( substr( $data, 1 ) );
+            $this->_uuid = UUID::toNormal( substr( $result, 1 ) );
 
             return $this->_uuid;
         } else {
@@ -57,30 +53,26 @@ class Client {
         }
     }
 
-    public function add( $uuid ) {
-        $cmd = $this->getCmd( self::CMD_ADD_SESSION );
-        $itemUuid = $this->getUUID( UUID::toBinary( $uuid ) );
+    public function add( $uuid, $lifetime = 0 ) {
+        $this->send([
+            $this->getCmd( self::CMD_ADD_SESSION ),
+            $this->getUUID( UUID::toBinary( $uuid ) ),
+            $this->getLifetime( $lifetime ),
+        ]);
 
-        if( !$this->send( Serialization::pack( [$cmd, $itemUuid] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
+        $this->validateResult( $this->recv() );
 
         $this->_uuid = $uuid;
     }
 
     public function init( $uuid ) {
-        $cmd = $this->getCmd( self::CMD_INIT );
-        $itemUuid = $this->getUUID( UUID::toBinary( $uuid ) );
+        $this->send([
+            $this->getCmd( self::CMD_INIT ),
+            $this->getUUID( UUID::toBinary( $uuid ) ),
+        ]);
 
-        if( !$this->send( Serialization::pack( [$cmd, $itemUuid] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $data = $this->recv();
-        $answer = ord( $data[0] );
+        $result = $this->recv();
+        $answer = ord( $result[0] );
 
         if( $answer == Codes::OK ) {
             $this->_uuid = $uuid;
@@ -91,61 +83,45 @@ class Client {
     }
 
     public function remove() {
-        $cmd = $this->getCmd( self::CMD_REMOVE );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
+        $this->send([
+            $this->getCmd( self::CMD_REMOVE ),
+            $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+        ]);
 
-        if( !$this->send( Serialization::pack( [$cmd, $uuid] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
+        $this->validateResult( $this->recv() );
 
         $this->_uuid = '';
     }
 
     public function prolong( $lifetime ) {
-        $cmd = $this->getCmd( self::CMD_PROLONG );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $lifetimeInt = $this->getValueInt( $lifetime );
+        $this->send([
+            $this->getCmd( self::CMD_PROLONG ),
+            $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+            $this->getLifetime( $lifetime ),
+        ]);
 
-        if( !$this->send( Serialization::pack( [$cmd, $uuid, $lifetimeInt] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
+        $this->validateResult( $this->recv() );
     }
 
     public function addKey( $key, $value, $lifetime = 0 ) {
-        $cmd = $this->getCmd( self::CMD_ADD_KEY );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $keyString = $this->getKeyString( $key );
-        $valueString = $this->getValueString( $value );
-        $lifetimeInt = $this->getValueInt( $lifetime );
-
-        $data = Serialization::pack( [
-            $cmd,
-            $uuid,
-            $keyString,
-            $valueString,
-            $lifetimeInt,
-        ] );
-
-        if( !$this->send( $data ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
+        $this->send([
+            $this->getCmd( self::CMD_ADD_KEY ),
+            $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+            $this->getKeyString( $key ),
+            $this->getValueString( $value ),
+            $this->getLifetime( $lifetime ),
+        ]);
 
         $result = $this->recv();
         $this->validateResult( $result );
 
         $clsKey = new SessionKey();
 
-        $idKeyInt = $this->getValueInt( 0 );
-        $idRecordInt = $this->getValueInt( 0 );
-        $arr = [ $cmd, $idKeyInt, $idRecordInt ];
+        $cmd = $this->getCmd( 0 );
+        $idKeyInt = $this->getInt( 0 );
+        $idRecordInt = $this->getInt( 0 );
 
-        Serialization::unpack( $arr, $result );
+        Serialization::unpack( [ $cmd, $idKeyInt, $idRecordInt ], $result );
 
         $clsKey->idKey = $idKeyInt->value;
         $clsKey->idRecord = $idRecordInt->value;
@@ -153,46 +129,36 @@ class Client {
         $this->_keys[$key] = $clsKey;
     }
 
-    public function addAllKey( $key, $value ) {
-        $cmd = $this->getCmd( self::CMD_ALL_ADD_KEY );
-        $keyString = $this->getKeyString( $key );
-        $valueString = $this->getValueString( $value );
+    public function addAllKey( $key, $value, $lifetime = 0 ) {
+        $this->send([
+            $this->getCmd( self::CMD_ALL_ADD_KEY ),
+            $this->getKeyString( $key ),
+            $this->getValueString( $value ),
+            $this->getLifetime( $lifetime ),
+        ]);
 
-        $data = Serialization::pack( [
-            $cmd,
-            $keyString,
-            $valueString,
-        ] );
-
-        if( !$this->send( $data ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
+        $this->validateResult( $this->recv() );
     }
 
     public function getKey( $key, $limit = 0 ) {
-        $cmd = $this->getCmd( self::CMD_GET_KEY );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $keyString = $this->getKeyString( $key );
-        $limitInt = $this->getValueShortInt( $limit );
-
-        if( !$this->send( Serialization::pack( [$cmd, $uuid, $keyString, $limitInt] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
+        $this->send([
+            $this->getCmd( self::CMD_GET_KEY ),
+            $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+            $this->getKeyString( $key ),
+            $this->getLimit( $limit ),
+        ]);
 
         $result = $this->recv();
         $this->validateResult( $result );
 
         $clsKey = new SessionKey();
 
-        $idKeyInt = $this->getValueInt( 0 );
-        $idRecordInt = $this->getValueInt( 0 );
+        $cmd = $this->getCmd( 0 );
+        $idKeyInt = $this->getInt( 0 );
+        $idRecordInt = $this->getInt( 0 );
         $valueString = $this->getValueString( '' );
-        $arr = [ $cmd, $valueString, $idKeyInt, $idRecordInt ];
 
-        Serialization::unpack( $arr, $result );
+        Serialization::unpack( [ $cmd, $valueString, $idKeyInt, $idRecordInt ], $result );
 
         $clsKey->idKey = $idKeyInt->value;
         $clsKey->idRecord = $idRecordInt->value;
@@ -203,83 +169,63 @@ class Client {
     }
 
     public function setKey( $key, $value, $limit = 0 ) {
-        $cmd = $this->getCmd( self::CMD_SET_KEY );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $keyString = $this->getKeyString( $key );
-        $valueString = $this->getValueString( $value );
-        $limitInt = $this->getValueShortInt( $limit );
-
         if( !isset( $this->_keys[$key] ) ) {
             $this->throwError( Codes::E_NOT_FOUND_KEY );
         }
 
-        $keyId = $this->getValueInt( $this->_keys[$key]->idKey );
-        $counterRecord = $this->getValueInt( $this->_keys[$key]->idRecord );
+        $this->send([
+            $this->getCmd( self::CMD_SET_KEY ),
+            $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+            $this->getKeyString( $key ),
+            $this->getValueString( $value ),
+            $this->getInt( $this->_keys[$key]->idKey ),
+            $this->getInt( $this->_keys[$key]->idRecord ),
+            $this->getLimit( $limit ),
+        ]);
 
-        $data = [ $cmd, $uuid, $keyString, $valueString, $keyId, $counterRecord, $limitInt ];
-
-        if( !$this->send( Serialization::pack( $data ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
+        $this->validateResult( $this->recv() );
 
         $this->_keys[$key]->idRecord++;
     }
 
     public function setForceKey( $key, $value, $limit = 0 ) {
-        $cmd = $this->getCmd( self::CMD_SET_FORCE_KEY );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $keyString = $this->getKeyString( $key );
-        $valueString = $this->getValueString( $value );
-        $limitInt = $this->getValueShortInt( $limit );
+        $this->send([
+            $this->getCmd( self::CMD_SET_FORCE_KEY ),
+            $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+            $this->getKeyString( $key ),
+            $this->getValueString( $value ),
+            $this->getLimit( $limit ),
+        ]);
 
-        $data = [ $cmd, $uuid, $keyString, $valueString, $limitInt ];
-
-        if( !$this->send( Serialization::pack( $data ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
+        $this->validateResult( $this->recv() );
     }
 
     public function removeKey( $key ) {
-        $cmd = $this->getCmd( self::CMD_REMOVE_KEY );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $keyString = $this->getKeyString( $key );
+        $this->send([
+            $this->getCmd( self::CMD_REMOVE_KEY ),
+            $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+            $this->getKeyString( $key ),
+        ]);
 
-        if( !$this->send( Serialization::pack( [$cmd, $uuid, $keyString] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
+        $this->validateResult( $this->recv() );
     }
 
     public function removeAllKey( $key ) {
-        $cmd = $this->getCmd( self::CMD_ALL_REMOVE_KEY );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $keyString = $this->getKeyString( $key );
+        $this->send([
+            $this->getCmd( self::CMD_ALL_REMOVE_KEY ),
+            $this->getKeyString( $key ),
+        ]);
 
-        if( !$this->send( Serialization::pack( [$cmd, $keyString] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
+        $this->validateResult( $this->recv() );
     }
 
 
     public function existKey( $key ) {
-        $cmd = $this->getCmd( self::CMD_EXIST_KEY );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $keyString = $this->getKeyString( $key );
-
-        if( !$this->send( Serialization::pack( [$cmd, $uuid, $keyString] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
+        $this->send([
+            $this->getCmd( self::CMD_EXIST_KEY ),
+            $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+            $this->getKeyString( $key ),
+        ]);
 
         $result = $this->recv();
 
@@ -295,17 +241,14 @@ class Client {
     }
 
     public function prolongKey( $key, $lifetime ) {
-        $cmd = $this->getCmd( self::CMD_PROLONG_KEY );
-        $uuid = $this->getUUID( UUID::toBinary( $this->_uuid ) );
-        $keyString = $this->getKeyString( $key );
-        $lifetimeInt = $this->getValueInt( $lifetime );
+        $this->send([
+            $this->getCmd( self::CMD_PROLONG_KEY ),
+            $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+            $this->getKeyString( $key ),
+            $this->getLifetime( $lifetime ),
+        ]);
 
-        if( !$this->send( Serialization::pack( [$cmd, $uuid, $keyString, $lifetimeInt] ) ) ) {
-            $this->throwError( Codes::E_SEND );
-        }
-
-        $result = $this->recv();
-        $this->validateResult( $result );
+        $this->validateResult( $this->recv() );
     }
 
     private function validateResult( $result ) {
@@ -367,32 +310,33 @@ class Client {
         return $item;
     }
 
-    private function getValueInt( $value ) {
+    private function getInt( $value ) {
         $item = new SerializationItem( SerializationItem::TYPE_INT );
         $item->value = $value;
 
         return $item;
     }
 
-    private function getValueShortInt( $value ) {
+    private function getLimit( $value ) {
         $item = new SerializationItem( SerializationItem::TYPE_SHORT_INT );
         $item->value = $value;
 
         return $item;
     }
 
-    private function getProlong( $value ) {
+    private function getLifetime( $value ) {
         return new SerializationItem( SerializationItem::TYPE_INT, $value );
     }
 
-    private function send( $value ) {
+    private function send( $items ) {
+        $data = Serialization::pack( $items );
 
-        $item = new SerializationItem( SerializationItem::TYPE_STRING, $value, strlen( $value ) );
+        $final = new SerializationItem( SerializationItem::TYPE_STRING, $data, strlen( $data ) );
 
-        $data = Serialization::pack( [$item] );
-
-        return $this->_network->send( $data );
-    } 
+        if( !$this->_network->send( Serialization::pack( [$final] ) ) ) {
+            $this->throwError( Codes::E_SEND );
+        }
+    }
 
     private function recv() {
         $length = $this->_network->recv( 4 );
