@@ -129,12 +129,11 @@ class Client {
         $this->_keys[$key] = $clsKey;
     }
 
-    public function addAllKey( $key, $value, $lifetime = 0 ) {
+    public function addAllKey( $key, $value ) {
         $this->send([
             $this->getCmd( self::CMD_ALL_ADD_KEY ),
             $this->getKeyString( $key ),
             $this->getValueString( $value ),
-            $this->getLifetime( $lifetime ),
         ]);
 
         $this->validateResult( $this->recv() );
