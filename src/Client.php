@@ -28,8 +28,8 @@ class Client {
     private $_network = null;
     private $_keys = [];
 
-    function __construct( $address ) {
-        $this->_network = new Network( $address );
+    function __construct( $host, $port ) {
+        $this->_network = new Network( $host, $port );
     }
 
     public function generate( $lifetime ) {

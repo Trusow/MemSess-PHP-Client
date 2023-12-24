@@ -5,12 +5,7 @@ class Network {
     private $_socket = null;
     private $_isConnect = false;
 
-    function __construct( $address ) {
-        $data = explode( ':', $address, 2 );
-
-        $host = $data[0];
-        $port = $data[1];
-
+    function __construct( $host, $port ) {
         $this->_socket = socket_create( AF_INET, SOCK_STREAM, SOL_TCP );
         socket_set_option( $this->_socket, SOL_TCP, TCP_NODELAY, true );
         $this->_isConnect = socket_connect( $this->_socket, $host, $port );
