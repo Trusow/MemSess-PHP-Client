@@ -265,7 +265,7 @@ class Client {
         case Codes::E_SESSION_NONE:
         case Codes::E_KEY_NONE:
         case Codes::E_LIMIT:
-        case Codes::E_LIFETIME:
+        case Codes::E_LIFETIME_EXCEEDED:
         case Codes::E_DUPCLICATE_KEY:
         case Codes::E_RECORD_BEEN_CHANGED:
         case Codes::E_LIMIT_PER_SEC:
