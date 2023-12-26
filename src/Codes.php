@@ -16,5 +16,5 @@ class Codes {
     public const E_DUPLICATE_SESSION = 11;
     public const E_UNKNOWN = 12;
     public const E_SEND = 13;
-    public const E_NOT_FOUND_KEY = 14;
+    public const E_SAVE_BEFORE_LOAD = 14;
 };

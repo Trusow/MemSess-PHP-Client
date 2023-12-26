@@ -169,7 +169,7 @@ class Client {
 
     public function setKey( $key, $value, $limit = 0 ) {
         if( !isset( $this->_keys[$key] ) ) {
-            $this->throwError( Codes::E_NOT_FOUND_KEY );
+            $this->throwError( Codes::E_SAVE_BEFORE_LOAD );
         }
 
         $this->send([
@@ -270,7 +270,7 @@ class Client {
         case Codes::E_RECORD_BEEN_CHANGED:
         case Codes::E_LIMIT_PER_SEC:
         case Codes::E_SEND:
-        case Codes::E_NOT_FOUND_KEY:
+        case Codes::E_SAVE_BEFORE_LOAD:
         case Codes::E_DUPLICATE_SESSION:
             throw new BaseException( $error );
             break;
