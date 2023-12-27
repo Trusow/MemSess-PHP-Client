@@ -182,9 +182,18 @@ class Client {
             $this->getLimit( $limit ),
         ]);
 
-        $this->validateResult( $this->recv() );
+        $answer = ord( $this->recv()[0] );
+        $result = false;
+
+        if( $answer == Codes::OK ) {
+            $result = true;
+        } else if( $answer != Codes::E_RECORD_BEEN_CHANGED ) {
+            $this->throwError( $answer );
+        }
 
         $this->_keys[$key]->idRecord++;
+
+        return $result;
     }
 
     public function setForceKey( $key, $value, $limit = 0 ) {
