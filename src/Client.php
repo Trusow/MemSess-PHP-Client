@@ -264,11 +264,11 @@ class Client {
         case Codes::E_WRONG_PARAMS:
         case Codes::E_SESSION_NONE:
         case Codes::E_KEY_NONE:
-        case Codes::E_LIMIT:
+        case Codes::E_LIMIT_EXCEEDED:
         case Codes::E_LIFETIME_EXCEEDED:
         case Codes::E_DUPCLICATE_KEY:
         case Codes::E_RECORD_BEEN_CHANGED:
-        case Codes::E_LIMIT_PER_SEC:
+        case Codes::E_LIMIT_PER_SEC_EXCEEDED:
         case Codes::E_SEND:
         case Codes::E_SAVE_BEFORE_LOAD:
         case Codes::E_DUPLICATE_SESSION:
