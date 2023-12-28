@@ -17,4 +17,8 @@ class Codes {
     public const E_UNKNOWN = 12;
     public const E_SEND = 13;
     public const E_SAVE_BEFORE_LOAD = 14;
+
+    public const E_WRONG_LIFETIME = 1001;
+    public const E_WRONG_TIMEOUT = 1002;
+    public const E_WRONG_ATTEMPTS = 1003;
 };
