@@ -259,6 +259,44 @@ class Client {
         $this->validateResult( $this->recv() );
     }
 
+    public function lock( $key, $lifetime = 1, $attempts = 1, $timeout = 10 ) {
+        if( $lifetime < 0 ) $this->throwError( Codes::E_WRONG_LIFETIME );
+        if( $timeout < 1 ) $this->throwError( Codes::E_WRONG_TIMEOUT );
+        if( $attempts < 0 ) $this->throwError( Codes::E_WRONG_ATTEMPTS );
+
+        $i = 0;
+
+        while( true ) {
+            if( $attempts != 0 && $i == $attempts ) {
+                return false;
+            };
+
+
+            $this->send([
+                $this->getCmd( self::CMD_ADD_KEY ),
+                $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+                $this->getKeyString( $key ),
+                $this->getValueString( '' ),
+                $this->getLifetime( $lifetime ),
+            ]);
+
+            $answer = ord( $this->recv()[0] );
+
+            if( $answer == Codes::OK ) {
+                return true;
+            } else if( $answer != Codes::E_DUPCLICATE_KEY ) {
+                $this->throwError( $answer );
+            }
+
+            $i++;
+            usleep( $timeout );
+        }
+    }
+
+    public function unlock( $key ) {
+        $this->removeKey( $key );
+    }
+
     private function validateResult( $result ) {
         $answer = ord( $result[0] );
 
@@ -281,6 +319,7 @@ class Client {
         case Codes::E_SEND:
         case Codes::E_SAVE_BEFORE_LOAD:
         case Codes::E_DUPLICATE_SESSION:
+        case Codes::E_WRONG_LIFETIME:
             throw new BaseException( $error );
             break;
         default:
