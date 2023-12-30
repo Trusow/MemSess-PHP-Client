@@ -34,9 +34,16 @@ class Client {
     private $_uuid = '';
     private $_network = null;
     private $_keys = [];
+    private $_locks = [];
 
     function __construct( $host, $port ) {
         $this->_network = new Network( $host, $port );
+    }
+
+    function __destruct() {
+        foreach( $this->_locks as $key => $v ) {
+            $this->unlock( $key );
+        }
     }
 
     public function generate( $lifetime ) {
@@ -321,6 +328,8 @@ class Client {
             $answer = ord( $this->recv()[0] );
 
             if( $answer == Codes::OK ) {
+                $this->_locks[$key] = true;
+
                 return true;
             } else if( $answer != Codes::E_DUPCLICATE_KEY ) {
                 $this->throwServerError( $answer );
@@ -339,6 +348,8 @@ class Client {
             $this->getUUID( UUID::toBinary( $this->_uuid ) ),
             $this->getKeyString( $key.Codes::PREFIX_LOCK ),
         ]);
+
+        unset( $this->_locks[$key] );
 
         $this->validateResult( $this->recv() );
     }
