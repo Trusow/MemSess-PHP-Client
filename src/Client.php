@@ -24,6 +24,13 @@ class Client {
     private const CMD_ALL_REMOVE_KEY = 15;
     private const CMD_ADD_SESSION = 18;
 
+    private const SEC_IN_YEAR = 31536000;
+    private const MAX_LIMIT = 65536;
+    private const MAX_LIFETIME_LOCK = 60;
+    private const MAX_ATTEMPTS_LOCK = 2147483647;
+    private const MIN_TIMEOUT_LOCK = 10;
+    private const MAX_TIMEOUT_LOCK = 10000;
+
     private $_uuid = '';
     private $_network = null;
     private $_keys = [];
@@ -34,6 +41,8 @@ class Client {
 
     public function generate( $lifetime ) {
         if( $this->_uuid ) return $this->_uuid;
+
+        Validation::validateInt( $lifetime, 0, self::SEC_IN_YEAR, Codes::E_WRONG_LIFETIME );
 
         $this->send([
             $this->getCmd( self::CMD_GENERATE ),
@@ -49,11 +58,14 @@ class Client {
 
             return $this->_uuid;
         } else {
-            $this->throwError( $answer );
+            $this->throwServerError( $answer );
         }
     }
 
     public function add( $uuid, $lifetime = 0 ) {
+        Validation::validateInt( $lifetime, 0, self::SEC_IN_YEAR, Codes::E_WRONG_LIFETIME );
+        Validation::validateUUID( $uuid, Codes::E_WRONG_UUID );
+
         $this->send([
             $this->getCmd( self::CMD_ADD_SESSION ),
             $this->getUUID( UUID::toBinary( $uuid ) ),
@@ -66,6 +78,8 @@ class Client {
     }
 
     public function init( $uuid ) {
+        Validation::validateUUID( $uuid, Codes::E_WRONG_UUID );
+
         $this->send([
             $this->getCmd( self::CMD_INIT ),
             $this->getUUID( UUID::toBinary( $uuid ) ),
@@ -94,6 +108,8 @@ class Client {
     }
 
     public function prolong( $lifetime ) {
+        Validation::validateInt( $lifetime, 0, self::SEC_IN_YEAR, Codes::E_WRONG_LIFETIME );
+
         $this->send([
             $this->getCmd( self::CMD_PROLONG ),
             $this->getUUID( UUID::toBinary( $this->_uuid ) ),
@@ -104,6 +120,9 @@ class Client {
     }
 
     public function addKey( $key, $value, $lifetime = 0 ) {
+        Validation::validateKey( $key, Codes::E_WRONG_KEY );
+        Validation::validateInt( $lifetime, 0, self::SEC_IN_YEAR, Codes::E_WRONG_LIFETIME );
+
         $this->send([
             $this->getCmd( self::CMD_ADD_KEY ),
             $this->getUUID( UUID::toBinary( $this->_uuid ) ),
@@ -130,6 +149,8 @@ class Client {
     }
 
     public function addAllKey( $key, $value ) {
+        Validation::validateKey( $key, Codes::E_WRONG_KEY );
+
         $this->send([
             $this->getCmd( self::CMD_ALL_ADD_KEY ),
             $this->getKeyString( $key ),
@@ -140,6 +161,9 @@ class Client {
     }
 
     public function getKey( $key, $limit = 0 ) {
+        Validation::validateKey( $key, Codes::E_WRONG_KEY );
+        Validation::validateInt( $limit, 0, self::MAX_LIMIT, Codes::E_WRONG_LIMIT );
+
         $this->send([
             $this->getCmd( self::CMD_GET_KEY ),
             $this->getUUID( UUID::toBinary( $this->_uuid ) ),
@@ -168,6 +192,9 @@ class Client {
     }
 
     public function setKey( $key, $value, $limit = 0 ) {
+        Validation::validateKey( $key, Codes::E_WRONG_KEY );
+        Validation::validateInt( $limit, 0, self::MAX_LIMIT, Codes::E_WRONG_LIMIT );
+
         if( !isset( $this->_keys[$key] ) ) {
             $this->throwError( Codes::E_SAVE_BEFORE_LOAD );
         }
@@ -188,7 +215,7 @@ class Client {
         if( $answer == Codes::OK ) {
             $result = true;
         } else if( $answer != Codes::E_RECORD_BEEN_CHANGED ) {
-            $this->throwError( $answer );
+            $this->throwServerError( $answer );
         }
 
         $this->_keys[$key]->idRecord++;
@@ -197,6 +224,9 @@ class Client {
     }
 
     public function setForceKey( $key, $value, $limit = 0 ) {
+        Validation::validateKey( $key, Codes::E_WRONG_KEY );
+        Validation::validateInt( $limit, 0, self::MAX_LIMIT, Codes::E_WRONG_LIMIT );
+
         $this->send([
             $this->getCmd( self::CMD_SET_FORCE_KEY ),
             $this->getUUID( UUID::toBinary( $this->_uuid ) ),
@@ -209,6 +239,8 @@ class Client {
     }
 
     public function removeKey( $key ) {
+        Validation::validateKey( $key, Codes::E_WRONG_KEY );
+
         $this->send([
             $this->getCmd( self::CMD_REMOVE_KEY ),
             $this->getUUID( UUID::toBinary( $this->_uuid ) ),
@@ -229,6 +261,8 @@ class Client {
 
 
     public function existKey( $key ) {
+        Validation::validateKey( $key, Codes::E_WRONG_KEY );
+
         $this->send([
             $this->getCmd( self::CMD_EXIST_KEY ),
             $this->getUUID( UUID::toBinary( $this->_uuid ) ),
@@ -240,7 +274,7 @@ class Client {
         $answer = ord( $result[0] );
 
         if( $answer != Codes::OK ) {
-            if( $answer != Codes::E_KEY_NONE ) $this->throwError( $answer );
+            if( $answer != Codes::E_KEY_NONE ) $this->throwServerError( $answer );
 
             return false;
         }
@@ -249,6 +283,9 @@ class Client {
     }
 
     public function prolongKey( $key, $lifetime ) {
+        Validation::validateKey( $key, Codes::E_WRONG_KEY );
+        Validation::validateInt( $lifetime, 0, self::SEC_IN_YEAR, Codes::E_WRONG_LIFETIME );
+
         $this->send([
             $this->getCmd( self::CMD_PROLONG_KEY ),
             $this->getUUID( UUID::toBinary( $this->_uuid ) ),
@@ -260,9 +297,10 @@ class Client {
     }
 
     public function lock( $key, $lifetime = 1, $attempts = 1, $timeout = 10 ) {
-        if( $lifetime < 0 ) $this->throwError( Codes::E_WRONG_LIFETIME );
-        if( $timeout < 1 ) $this->throwError( Codes::E_WRONG_TIMEOUT );
-        if( $attempts < 0 ) $this->throwError( Codes::E_WRONG_ATTEMPTS );
+        Validation::validateKey( $key, Codes::E_WRONG_KEY );
+        Validation::validateInt( $lifetime, 1, self::MAX_LIFETIME_LOCK, Codes::E_WRONG_LIFETIME );
+        Validation::validateInt( $attempts, 0, self::MAX_ATTEMPTS_LOCK, Codes::E_WRONG_ATTEMPTS );
+        Validation::validateInt( $timeout, self::MIN_TIMEOUT_LOCK, self::MAX_TIMEOUT_LOCK, Codes::E_WRONG_TIMEOUT );
 
         $i = 0;
 
@@ -275,7 +313,7 @@ class Client {
             $this->send([
                 $this->getCmd( self::CMD_ADD_KEY ),
                 $this->getUUID( UUID::toBinary( $this->_uuid ) ),
-                $this->getKeyString( $key ),
+                $this->getKeyString( $key.Codes::PREFIX_LOCK ),
                 $this->getValueString( '' ),
                 $this->getLifetime( $lifetime ),
             ]);
@@ -285,7 +323,7 @@ class Client {
             if( $answer == Codes::OK ) {
                 return true;
             } else if( $answer != Codes::E_DUPCLICATE_KEY ) {
-                $this->throwError( $answer );
+                $this->throwServerError( $answer );
             }
 
             $i++;
@@ -294,18 +332,30 @@ class Client {
     }
 
     public function unlock( $key ) {
-        $this->removeKey( $key );
+        Validation::validateKey( $key, Codes::E_WRONG_KEY );
+
+        $this->send([
+            $this->getCmd( self::CMD_REMOVE_KEY ),
+            $this->getUUID( UUID::toBinary( $this->_uuid ) ),
+            $this->getKeyString( $key.Codes::PREFIX_LOCK ),
+        ]);
+
+        $this->validateResult( $this->recv() );
     }
 
     private function validateResult( $result ) {
         $answer = ord( $result[0] );
 
         if( $answer != Codes::OK ) {
-            $this->throwError( $answer );
+            $this->throwServerError( $answer );
         }
     }
 
     private function throwError( $error ) {
+        throw new BaseException( $error );
+    }
+
+    private function throwServerError( $error ) {
         switch( $error ) {
         case Codes::E_WRONG_COMMAND:
         case Codes::E_WRONG_PARAMS:
@@ -316,10 +366,7 @@ class Client {
         case Codes::E_DUPCLICATE_KEY:
         case Codes::E_RECORD_BEEN_CHANGED:
         case Codes::E_LIMIT_PER_SEC_EXCEEDED:
-        case Codes::E_SEND:
-        case Codes::E_SAVE_BEFORE_LOAD:
         case Codes::E_DUPLICATE_SESSION:
-        case Codes::E_WRONG_LIFETIME:
             throw new BaseException( $error );
             break;
         default:
