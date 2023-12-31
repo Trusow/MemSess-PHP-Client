@@ -33,6 +33,6 @@ class Validation {
     private static function throwError( $error ) {
         if( !$error ) return false;
 
-        throw new BaseException( $error );
+        Errors::throwError( $error );
     }
 }
