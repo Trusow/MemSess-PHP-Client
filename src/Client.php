@@ -1,8 +1,6 @@
 <?php 
 namespace MemSess;
 
-include_once 'Serialization.php';
-
 class SessionKey {
     public $idKey;
     public $counterRecord;
