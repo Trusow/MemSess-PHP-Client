@@ -39,10 +39,8 @@ class Errors {
         case self::E_SEND:
         case self::E_SAVE_BEFORE_LOAD:
             throw new BaseException( $error );
-            break;
         default:
             throw new BaseException( self::E_UNKNOWN );
-            break;
         }
     }
 
@@ -59,10 +57,8 @@ class Errors {
         case self::E_LIMIT_PER_SEC_EXCEEDED:
         case self::E_DUPLICATE_SESSION:
             throw new BaseException( $error );
-            break;
         default:
             throw new BaseException( self::E_UNKNOWN );
-            break;
         }
     }
 
