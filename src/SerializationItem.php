@@ -52,7 +52,7 @@ class SerializationItem {
             }
             break;
         default:
-            throw -1;
+            Errors::throwError( Errors::E_WRONG_SERAILIZATION_ITEM );
         }
     }
 

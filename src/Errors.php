@@ -20,6 +20,7 @@ class Errors {
     public const E_WRONG_KEY = 1004;
     public const E_WRONG_UUID = 1005;
     public const E_WRONG_LIMIT = 1006;
+    public const E_WRONG_SERAILIZATION_ITEM = 1007;
 
     public const E_UNKNOWN = 1101;
     public const E_SEND = 1102;
