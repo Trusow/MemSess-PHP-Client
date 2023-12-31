@@ -10,14 +10,14 @@ class Validation {
         return true;
     }
 
-    public static function validateKey( $value, $error = 0 ) {
+    public static function validateKey( $value, $prefixLock, $error = 0 ) {
         if( !is_string( $value ) || $value === '' ) return self::throwError( $error );
 
-        $offset = strrpos( $value, Codes::PREFIX_LOCK );
+        $offset = strrpos( $value, $prefixLock );
 
         if( $offset === false ) return true;
 
-        if( $offset + strlen( Codes::PREFIX_LOCK ) == strlen( $value ) ) return self::throwError( $error );
+        if( $offset + strlen( $prefixLock ) == strlen( $value ) ) return self::throwError( $error );
 
         return true;
     }
