@@ -27,7 +27,23 @@ class Errors {
     public const E_SAVE_BEFORE_LOAD = 1103;
 
     public static function throwError( $error ) {
-        throw new BaseException( $error );
+        switch( $error ) {
+        case self::E_WRONG_LIFETIME:
+        case self::E_WRONG_TIMEOUT:
+        case self::E_WRONG_ATTEMPTS:
+        case self::E_WRONG_KEY:
+        case self::E_WRONG_UUID:
+        case self::E_WRONG_LIMIT:
+        case self::E_WRONG_SERAILIZATION_ITEM:
+        case self::E_UNKNOWN:
+        case self::E_SEND:
+        case self::E_SAVE_BEFORE_LOAD:
+            throw new BaseException( $error );
+            break;
+        default:
+            throw new BaseException( self::E_UNKNOWN );
+            break;
+        }
     }
 
     public static function throwServerError( $error ) {
