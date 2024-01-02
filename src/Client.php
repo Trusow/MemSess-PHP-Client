@@ -28,7 +28,7 @@ class Client {
     private const MAX_ATTEMPTS_LOCK = 2147483647;
     private const MIN_TIMEOUT_LOCK = 10;
     private const MAX_TIMEOUT_LOCK = 10000;
-    private const PREFIX_LOCK = '.lock';
+    private const PREFIX_LOCK = '.';
     private const ANSWER_OK = 1;
 
     private $_uuid = '';
