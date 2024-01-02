@@ -155,7 +155,7 @@ class Client {
         $this->_keys[$key] = $clsKey;
     }
 
-    public function addAllKey( $key, $value ) {
+    public function addKeyToAll( $key, $value ) {
         Validation::validateKey( $key, self::PREFIX_LOCK, Errors::E_WRONG_KEY );
 
         $this->send([
@@ -257,7 +257,7 @@ class Client {
         $this->validateResult( $this->recv() );
     }
 
-    public function removeAllKey( $key ) {
+    public function removeKeyFromAll( $key ) {
         $this->send([
             $this->getCmd( self::CMD_ALL_REMOVE_KEY ),
             $this->getKeyString( $key ),
