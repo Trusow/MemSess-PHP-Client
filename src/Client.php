@@ -195,7 +195,7 @@ class Client {
 
         $this->_keys[$key] = $clsKey;
 
-        return $valueString->value;
+        return json_decode( $valueString->value, true );
     }
 
     public function setKey( $key, $value, $limit = 0 ) {
@@ -386,7 +386,7 @@ class Client {
 
     private function getValueString( $value ) {
         $item = new SerializationItem( SerializationItem::TYPE_STRING );
-        $item->value = $value;
+        $item->value = json_encode( $value );
 
         return $item;
     }
