@@ -417,7 +417,7 @@ class Client {
         $itemDurationReceivingLess200ms = $this->getStatisticValue();
         $itemDurationReceivingLess500ms = $this->getStatisticValue();
         $itemDurationReceivingLess1000ms = $this->getStatisticValue();
-        $itemDurationReceivingOther = $this->getStatisticValue();
+        $itemDurationReceivingMore1000ms = $this->getStatisticValue();
 
         $itemDurationProcessingLess5ms = $this->getStatisticValue();
         $itemDurationProcessingLess10ms = $this->getStatisticValue();
@@ -427,7 +427,7 @@ class Client {
         $itemDurationProcessingLess200ms = $this->getStatisticValue();
         $itemDurationProcessingLess500ms = $this->getStatisticValue();
         $itemDurationProcessingLess1000ms = $this->getStatisticValue();
-        $itemDurationProcessingOther = $this->getStatisticValue();
+        $itemDurationProcessingMore1000ms = $this->getStatisticValue();
 
         $itemDurationSendingLess5ms = $this->getStatisticValue();
         $itemDurationSendingLess10ms = $this->getStatisticValue();
@@ -437,7 +437,7 @@ class Client {
         $itemDurationSendingLess200ms = $this->getStatisticValue();
         $itemDurationSendingLess500ms = $this->getStatisticValue();
         $itemDurationSendingLess1000ms = $this->getStatisticValue();
-        $itemDurationSendingOther = $this->getStatisticValue();
+        $itemDurationSendingMore1000ms = $this->getStatisticValue();
 
         $itemTotalFreeSessions = $this->getStatisticValue();
 
@@ -497,7 +497,7 @@ class Client {
             $itemDurationReceivingLess200ms,
             $itemDurationReceivingLess500ms,
             $itemDurationReceivingLess1000ms,
-            $itemDurationReceivingOther,
+            $itemDurationReceivingMore1000ms,
 
             $itemDurationProcessingLess5ms,
             $itemDurationProcessingLess10ms,
@@ -507,7 +507,7 @@ class Client {
             $itemDurationProcessingLess200ms,
             $itemDurationProcessingLess500ms,
             $itemDurationProcessingLess1000ms,
-            $itemDurationProcessingOther,
+            $itemDurationProcessingMore1000ms,
 
             $itemDurationSendingLess5ms,
             $itemDurationSendingLess10ms,
@@ -517,7 +517,7 @@ class Client {
             $itemDurationSendingLess200ms,
             $itemDurationSendingLess500ms,
             $itemDurationSendingLess1000ms,
-            $itemDurationSendingOther,
+            $itemDurationSendingMore1000ms,
 
             $itemTotalFreeSessions,
         ], $result );
@@ -582,7 +582,7 @@ class Client {
                     'less200ms' => $itemDurationReceivingLess200ms->value,
                     'less500ms' => $itemDurationReceivingLess500ms->value,
                     'less1000ms' => $itemDurationReceivingLess1000ms->value,
-                    'other' => $itemDurationReceivingOther->value,
+                    'more100ms' => $itemDurationReceivingMore1000ms->value,
                 ],
                 'processing' => [
                     'less5ms' => $itemDurationProcessingLess5ms->value,
@@ -593,7 +593,7 @@ class Client {
                     'less200ms' => $itemDurationProcessingLess200ms->value,
                     'less500ms' => $itemDurationProcessingLess500ms->value,
                     'less1000ms' => $itemDurationProcessingLess1000ms->value,
-                    'other' => $itemDurationProcessingOther->value,
+                    'more1000ms' => $itemDurationProcessingMore1000ms->value,
                 ],
                 'sending' => [
                     'less5ms' => $itemDurationProcessingLess5ms->value,
@@ -604,7 +604,7 @@ class Client {
                     'less200ms' => $itemDurationProcessingLess200ms->value,
                     'less500ms' => $itemDurationProcessingLess500ms->value,
                     'less1000ms' => $itemDurationProcessingLess1000ms->value,
-                    'other' => $itemDurationProcessingOther->value,
+                    'more1000ms' => $itemDurationProcessingMore1000ms->value,
                 ],
             ],
             'totalFreeSessions' => $itemTotalFreeSessions->value,
