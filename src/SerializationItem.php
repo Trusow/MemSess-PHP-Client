@@ -6,9 +6,10 @@ class SerializationItem {
     public const TYPE_BYTE = 1;
     public const TYPE_INT = 2;
     public const TYPE_SHORT_INT = 3;
-    public const TYPE_STRING = 4;
-    public const TYPE_FIXED_STRING = 5;
-    public const TYPE_STRING_WITH_NULL = 6;
+    public const TYPE_LONG_INT = 4;
+    public const TYPE_STRING = 5;
+    public const TYPE_FIXED_STRING = 6;
+    public const TYPE_STRING_WITH_NULL = 7;
 
     private $length;
     private $value;
@@ -32,6 +33,13 @@ class SerializationItem {
             break;
         case self::TYPE_SHORT_INT:
             $this->length = 2;
+            $this->type = $_type;
+            if( $_value ) {
+                $this->value = $_value;
+            }
+            break;
+        case self::TYPE_LONG_INT:
+            $this->length = 8;
             $this->type = $_type;
             if( $_value ) {
                 $this->value = $_value;

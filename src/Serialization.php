@@ -17,6 +17,9 @@ class Serialization {
             case SerializationItem::TYPE_SHORT_INT:
                 $data .= pack( 'n', $item->value );
                 break;
+            case SerializationItem::TYPE_LONG_INT:
+                $data .= pack( 'J', $item->value );
+                break;
             case SerializationItem::TYPE_STRING:
                 $data .= pack( 'N', strlen( $item->value ) );
                 $data .= $item->value;
@@ -46,6 +49,10 @@ class Serialization {
                 break;
             case SerializationItem::TYPE_SHORT_INT:
                 $item->value = unpack( 'ndata', $encData )['data'];
+                $encData = substr( $encData, $item->length );
+                break;
+            case SerializationItem::TYPE_LONG_INT:
+                $item->value = unpack( 'Jdata', $encData )['data'];
                 $encData = substr( $encData, $item->length );
                 break;
             case SerializationItem::TYPE_STRING:
