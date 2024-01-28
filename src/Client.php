@@ -21,6 +21,7 @@ class Client {
     private const CMD_ALL_ADD_KEY = 14;
     private const CMD_ALL_REMOVE_KEY = 15;
     private const CMD_ADD_SESSION = 18;
+    private const CMD_GET_STATISTICS = 19;
 
     private const SEC_IN_YEAR = 31536000;
     private const MAX_LIMIT = 65536;
@@ -354,6 +355,262 @@ class Client {
         $this->validateResult( $this->recv() );
     }
 
+    public function getStatistics() {
+        $cmd = $this->getCmd( self::CMD_GET_STATISTICS );
+        $this->send([
+            $cmd
+        ]);
+
+        $result = $this->recv();
+        $this->validateResult( $result );
+
+        $itemSendedBytes = $this->getStatisticValue();
+        $itemReceivedBytes = $this->getStatisticValue();
+
+        $itemPassedGenerate = $this->getStatisticValue();
+        $itemPassedExist = $this->getStatisticValue();
+        $itemPassedAdd = $this->getStatisticValue();
+        $itemPassedProlong = $this->getStatisticValue();
+        $itemPassedRemove = $this->getStatisticValue();
+        $itemPassedAddKey = $this->getStatisticValue();
+        $itemPassedExistKey = $this->getStatisticValue();
+        $itemPassedRemoveKey = $this->getStatisticValue();
+        $itemPassedProlongKey = $this->getStatisticValue();
+        $itemPassedGetKey = $this->getStatisticValue();
+        $itemPassedSetKey = $this->getStatisticValue();
+        $itemPassedSetForceKey = $this->getStatisticValue();
+        $itemPassedAddKeyToAll = $this->getStatisticValue();
+        $itemPassedRemoveKeyFromAll = $this->getStatisticValue();
+
+        $itemFailedGenerate = $this->getStatisticValue();
+        $itemFailedExist = $this->getStatisticValue();
+        $itemFailedAdd = $this->getStatisticValue();
+        $itemFailedProlong = $this->getStatisticValue();
+        $itemFailedRemove = $this->getStatisticValue();
+        $itemFailedAddKey = $this->getStatisticValue();
+        $itemFailedExistKey = $this->getStatisticValue();
+        $itemFailedRemoveKey = $this->getStatisticValue();
+        $itemFailedProlongKey = $this->getStatisticValue();
+        $itemFailedGetKey = $this->getStatisticValue();
+        $itemFailedSetKey = $this->getStatisticValue();
+        $itemFailedSetForceKey = $this->getStatisticValue();
+        $itemFailedAddKeyToAll = $this->getStatisticValue();
+        $itemFailedRemoveKeyFromAll = $this->getStatisticValue();
+
+        $itemErrorWrongCommand = $this->getStatisticValue();
+        $itemErrorWrongParams = $this->getStatisticValue();
+        $itemErrorSessionNone = $this->getStatisticValue();
+        $itemErrorKeyNone = $this->getStatisticValue();
+        $itemErrorLimitExceeded = $this->getStatisticValue();
+        $itemErrorLifetimeExceeded = $this->getStatisticValue();
+        $itemErrorDuplicateKey = $this->getStatisticValue();
+        $itemErrorRecordBeenChanged = $this->getStatisticValue();
+        $itemErrorLimitPerSecExceeded = $this->getStatisticValue();
+        $itemErrorDuplicateSession = $this->getStatisticValue();
+        $itemErrorDisconnection = $this->getStatisticValue();
+
+        $itemDurationReceivingLess5ms = $this->getStatisticValue();
+        $itemDurationReceivingLess10ms = $this->getStatisticValue();
+        $itemDurationReceivingLess20ms = $this->getStatisticValue();
+        $itemDurationReceivingLess50ms = $this->getStatisticValue();
+        $itemDurationReceivingLess100ms = $this->getStatisticValue();
+        $itemDurationReceivingLess200ms = $this->getStatisticValue();
+        $itemDurationReceivingLess500ms = $this->getStatisticValue();
+        $itemDurationReceivingLess1000ms = $this->getStatisticValue();
+        $itemDurationReceivingOther = $this->getStatisticValue();
+
+        $itemDurationProcessingLess5ms = $this->getStatisticValue();
+        $itemDurationProcessingLess10ms = $this->getStatisticValue();
+        $itemDurationProcessingLess20ms = $this->getStatisticValue();
+        $itemDurationProcessingLess50ms = $this->getStatisticValue();
+        $itemDurationProcessingLess100ms = $this->getStatisticValue();
+        $itemDurationProcessingLess200ms = $this->getStatisticValue();
+        $itemDurationProcessingLess500ms = $this->getStatisticValue();
+        $itemDurationProcessingLess1000ms = $this->getStatisticValue();
+        $itemDurationProcessingOther = $this->getStatisticValue();
+
+        $itemDurationSendingLess5ms = $this->getStatisticValue();
+        $itemDurationSendingLess10ms = $this->getStatisticValue();
+        $itemDurationSendingLess20ms = $this->getStatisticValue();
+        $itemDurationSendingLess50ms = $this->getStatisticValue();
+        $itemDurationSendingLess100ms = $this->getStatisticValue();
+        $itemDurationSendingLess200ms = $this->getStatisticValue();
+        $itemDurationSendingLess500ms = $this->getStatisticValue();
+        $itemDurationSendingLess1000ms = $this->getStatisticValue();
+        $itemDurationSendingOther = $this->getStatisticValue();
+
+        $itemTotalFreeSessions = $this->getStatisticValue();
+
+        Serialization::unpack([
+            $cmd,
+
+            $itemSendedBytes,
+            $itemReceivedBytes,
+
+            $itemPassedGenerate,
+            $itemPassedExist,
+            $itemPassedAdd,
+            $itemPassedProlong,
+            $itemPassedRemove,
+            $itemPassedAddKey,
+            $itemPassedExistKey,
+            $itemPassedRemoveKey,
+            $itemPassedProlongKey,
+            $itemPassedGetKey,
+            $itemPassedSetKey,
+            $itemPassedSetForceKey,
+            $itemPassedAddKeyToAll,
+            $itemPassedRemoveKeyFromAll,
+
+            $itemFailedGenerate,
+            $itemFailedExist,
+            $itemFailedAdd,
+            $itemFailedProlong,
+            $itemFailedRemove,
+            $itemFailedAddKey,
+            $itemFailedExistKey,
+            $itemFailedRemoveKey,
+            $itemFailedProlongKey,
+            $itemFailedGetKey,
+            $itemFailedSetKey,
+            $itemFailedSetForceKey,
+            $itemFailedAddKeyToAll,
+            $itemFailedRemoveKeyFromAll,
+
+            $itemErrorWrongCommand,
+            $itemErrorWrongParams,
+            $itemErrorSessionNone,
+            $itemErrorKeyNone,
+            $itemErrorLimitExceeded,
+            $itemErrorLifetimeExceeded,
+            $itemErrorDuplicateKey,
+            $itemErrorRecordBeenChanged,
+            $itemErrorLimitPerSecExceeded,
+            $itemErrorDuplicateSession,
+            $itemErrorDisconnection,
+
+            $itemDurationReceivingLess5ms,
+            $itemDurationReceivingLess10ms,
+            $itemDurationReceivingLess20ms,
+            $itemDurationReceivingLess50ms,
+            $itemDurationReceivingLess100ms,
+            $itemDurationReceivingLess200ms,
+            $itemDurationReceivingLess500ms,
+            $itemDurationReceivingLess1000ms,
+            $itemDurationReceivingOther,
+
+            $itemDurationProcessingLess5ms,
+            $itemDurationProcessingLess10ms,
+            $itemDurationProcessingLess20ms,
+            $itemDurationProcessingLess50ms,
+            $itemDurationProcessingLess100ms,
+            $itemDurationProcessingLess200ms,
+            $itemDurationProcessingLess500ms,
+            $itemDurationProcessingLess1000ms,
+            $itemDurationProcessingOther,
+
+            $itemDurationSendingLess5ms,
+            $itemDurationSendingLess10ms,
+            $itemDurationSendingLess20ms,
+            $itemDurationSendingLess50ms,
+            $itemDurationSendingLess100ms,
+            $itemDurationSendingLess200ms,
+            $itemDurationSendingLess500ms,
+            $itemDurationSendingLess1000ms,
+            $itemDurationSendingOther,
+
+            $itemTotalFreeSessions,
+        ], $result );
+
+        return [
+            'traffic' => [
+                'sendedBytes' => $itemSendedBytes->value,
+                'receivedBytes' => $itemReceivedBytes->value,
+            ],
+            'passedRequests' => [
+                'generate' => $itemPassedGenerate->value,
+                'init' => $itemPassedExist->value,
+                'add' => $itemPassedAdd->value,
+                'prolong' => $itemPassedProlong->value,
+                'remove' => $itemPassedRemove->value,
+                'addKey' => $itemPassedAddKey->value,
+                'existKey' => $itemPassedExistKey->value,
+                'removeKey' => $itemPassedRemoveKey->value,
+                'prolongKey' => $itemPassedProlongKey->value,
+                'getKey' => $itemPassedGetKey->value,
+                'setKey' => $itemPassedSetKey->value,
+                'setForceKey' => $itemPassedSetForceKey->value,
+                'addKeyToAll' => $itemPassedAddKeyToAll->value,
+                'removeKeyFromAll' => $itemPassedRemoveKeyFromAll->value,
+            ],
+            'failedRequests' => [
+                'generate' => $itemFailedGenerate->value,
+                'init' => $itemFailedExist->value,
+                'add' => $itemFailedAdd->value,
+                'prolong' => $itemFailedProlong->value,
+                'remove' => $itemFailedRemove->value,
+                'addKey' => $itemFailedAddKey->value,
+                'existKey' => $itemFailedExistKey->value,
+                'removeKey' => $itemFailedRemoveKey->value,
+                'prolongKey' => $itemFailedProlongKey->value,
+                'getKey' => $itemFailedGetKey->value,
+                'setKey' => $itemFailedSetKey->value,
+                'setForceKey' => $itemFailedSetForceKey->value,
+                'addKeyToAll' => $itemFailedAddKeyToAll->value,
+                'removeKeyFromAll' => $itemFailedRemoveKeyFromAll->value,
+            ],
+            'errors' => [
+                'wrongCommand' => $itemErrorWrongCommand->value,
+                'wrongParams' => $itemErrorWrongParams->value,
+                'wrongSessionNone' => $itemErrorSessionNone->value,
+                'wrongKeyNone' => $itemErrorKeyNone->value,
+                'limitExceeded' => $itemErrorLimitExceeded->value,
+                'lifetimeExceeded' => $itemErrorLifetimeExceeded->value,
+                'duplicateKey' => $itemErrorDuplicateKey->value,
+                'recordBeenChanged' => $itemErrorRecordBeenChanged->value,
+                'limitPerSecExceeded' => $itemErrorLimitPerSecExceeded->value,
+                'duplicateSession' => $itemErrorDuplicateSession->value,
+                'disconnection' => $itemErrorDisconnection->value,
+            ],
+            'duration' => [
+                'receiving' => [
+                    'less5ms' => $itemDurationReceivingLess5ms->value,
+                    'less10ms' => $itemDurationReceivingLess10ms->value,
+                    'less20ms' => $itemDurationReceivingLess20ms->value,
+                    'less50ms' => $itemDurationReceivingLess50ms->value,
+                    'less100ms' => $itemDurationReceivingLess100ms->value,
+                    'less200ms' => $itemDurationReceivingLess200ms->value,
+                    'less500ms' => $itemDurationReceivingLess500ms->value,
+                    'less1000ms' => $itemDurationReceivingLess1000ms->value,
+                    'other' => $itemDurationReceivingOther->value,
+                ],
+                'processing' => [
+                    'less5ms' => $itemDurationProcessingLess5ms->value,
+                    'less10ms' => $itemDurationProcessingLess10ms->value,
+                    'less20ms' => $itemDurationProcessingLess20ms->value,
+                    'less50ms' => $itemDurationProcessingLess50ms->value,
+                    'less100ms' => $itemDurationProcessingLess100ms->value,
+                    'less200ms' => $itemDurationProcessingLess200ms->value,
+                    'less500ms' => $itemDurationProcessingLess500ms->value,
+                    'less1000ms' => $itemDurationProcessingLess1000ms->value,
+                    'other' => $itemDurationProcessingOther->value,
+                ],
+                'sending' => [
+                    'less5ms' => $itemDurationProcessingLess5ms->value,
+                    'less10ms' => $itemDurationProcessingLess10ms->value,
+                    'less20ms' => $itemDurationProcessingLess20ms->value,
+                    'less50ms' => $itemDurationProcessingLess50ms->value,
+                    'less100ms' => $itemDurationProcessingLess100ms->value,
+                    'less200ms' => $itemDurationProcessingLess200ms->value,
+                    'less500ms' => $itemDurationProcessingLess500ms->value,
+                    'less1000ms' => $itemDurationProcessingLess1000ms->value,
+                    'other' => $itemDurationProcessingOther->value,
+                ],
+            ],
+            'totalFreeSessions' => $itemTotalFreeSessions->value,
+        ];
+    }
+
     private function validateResult( $result ) {
         $answer = ord( $result[0] );
 
@@ -403,6 +660,10 @@ class Client {
         $item->value = $value;
 
         return $item;
+    }
+
+    private function getStatisticValue() {
+        return new SerializationItem( SerializationItem::TYPE_LONG_INT );
     }
 
     private function getLifetime( $value ) {
